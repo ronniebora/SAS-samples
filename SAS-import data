@@ -1,0 +1,159 @@
+
+
+/*Method I : PROC IMPORT*
+
+PROC IMPORT is a SAS procedure to import external files into SAS. 
+It automates importing process. 
+You don't need to specify variable type and variable length to import an external file. 
+It supports various formats such as excel file, csv, txt etc.
+*/
+
+PROC IMPORT 
+DATAFILE="filename" /*Complete filename path of the Excel file*/
+OUT=library.SAS-data-set-name
+DBMS=identifier /* type of excel file to read | XLS or XLSX */ 
+  REPLACE; /*to replace an existing sas data set*/
+  SHEET="Sheet-name";/*which sheet in excel to import*/
+  GETNAMES=YES; /*if SAS should import the headers as variable names*/
+  DATAROW=N;/* N is the row number to start pulling data from | */
+  RANGE="range-name";
+RUN;
+
+/*Importing only specified columns from excel file*/
+PROC IMPORT OUT= WORK.want (keep=id x y z)
+ DATAFILE= "C:\Desktop\File1.xls"
+ DBMS=XLS REPLACE;
+     GETNAMES=YES;
+RUN;         
+
+PROC IMPORT OUT= WORK.want (DROP=A B C) 
+DATAFILE= "C:\Desktop\File1.xls" 
+DBMS=XLS REPLACE;     
+GETNAMES=YES;
+RUN;  
+
+/*Importing only rows that have non-missing data for all the variables*/
+PROC IMPORT OUT= WORK.want ( WHERE=(x NE . AND y NE .AND z NE .))
+ DATAFILE= "C:\Desktop\File1.xls"
+ DBMS=XLS REPLACE;
+     GETNAMES=YES;
+RUN; 
+
+
+/*Importing an excel file from web page into SAS*/
+
+FILENAME website url "http://www2.census.gov/acs2005/Tables_Profiles_Subject_Tables/010Nation/United%20States.xls" debug;               
+                                                                                                                                        
+                                                                                                                                        
+PROC IMPORT 
+OUT= Readin 
+DATAFILE= website                                                                                                
+      DBMS=xls REPLACE;                                                                                                                 
+     SHEET="Base Tables";                                                                                                               
+     GETNAMES=YES;                                                                                                                      
+RUN;                                                                                                                                    
+
+
+/*Importing a Tab-Delimited File into SAS*/
+PROC IMPORT 
+DATAFILE= "c:\deepanshu\sampledata.txt"
+OUT= outdata
+DBMS=dlm/*delimited file*/
+REPLACE;
+delimiter='09'x;/*tab delimiter*/
+delimiter='20'x;/*space demiliter*/
+GETNAMES=YES;
+RUN;
+
+PROC IMPORT 
+DATAFILE= "c:\deepanshu\sampledata.txt"
+OUT= outdata
+DBMS=dlm/*delimited file with TXT file*/
+REPLACE;
+delimiter=',';/*comma delimiter*/
+GETNAMES=YES;
+RUN;
+
+PROC IMPORT DATAFILE= "c:\deepanshu\sampledata.txt"
+OUT= outdata
+DBMS=csv/*demilited file with CSV file*/
+REPLACE;
+GETNAMES=YES;
+RUN;
+
+
+
+/*Method II : Get External File - INFILE
+In SAS, there is one more method called INFILE to import an external file. 
+It's a manual method of importing an external file as you need to specify variables and its types and length.
+
+*/
+/*Reading a CSV File*/
+
+data outdata; 
+infile 'c:\users\deepanshu\documents\book1.csv' /*location and file name*/
+dsd /*default demiliter from blank to comma*/
+firstobs=2;/*obs start from row 2*/
+input id age gender $ dept $
+run; 
+
+/*Reading a TAB Delimited File*/
+data outdata;
+   infile 'c:\deepanshu\dummydata.txt' DSD dlm='09'x truncover;/*turncover tells SAS to assign the raw data value to variable even if the value is shorter than expected by INPUT statement*/
+   input employee :$30. DOJ :mmddyy8. state :$20.;
+ run;
+
+
+ /*Use COLON Modifier
+We can use colon modifier : to tell SAS to read variable "Name" until there is a space or other delimiter. 
+ The  $30. defines the variable as a character variable having max length 30.
+ */
+
+data a.exmaple1;
+ input ID Name :$30. Score;
+ cards;
+ 1 DeepanshuBhalla 22
+ 2 AttaPat 21
+ 3 XonxiangnamSamnuelnarayan 33
+ ;
+ run;
+ proc print noobs;
+ run;
+
+ /*Use LENGTH statement prior to INPUT Statement
+In the following program, we use a length statement prior to input statement to adjust varying length of a variable. 
+ In this case, the variable Name would be read first. 
+ Use only $ instead of $30. after "Name" in INPUT statement.*/
+
+ data a.example2;
+ length Name $30.;
+ input ID Name $ Score;
+ cards;
+ 1 DeepanshuBhalla 22
+ 2 AttaPat 21
+ 3 XonxiangnamSamnuelnarayan 33
+ ;
+ proc print noobs;
+ run;
+
+ /*Use Ampersand (&) and Put Extra Space*/
+
+ /*We can use ampersand (&) to tell SAS to read the variable until there are two or more spaces as a delimeter. 
+ This technique is very useful when the variable contains two or more words. */
+
+ data a.example3;
+ input ID Name & $30. Score;
+ cards;
+ 1 Deepanshu Bhalla  22
+ 2 AttaPat  21
+ 3 Xonxiangnam Samnuel narayan  33
+ ;run;
+ proc print noobs;
+ run;
+
+
+ data temp;
+ infile "C:\Users\Deepanshu\Desktop\file1.txt";
+ input ID Name & $30. Score;run;
+ proc print noobs;
+ run;
