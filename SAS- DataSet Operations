@@ -589,3 +589,74 @@ proc print;
 
 
 
+Subsetting Datasets
+
+Sub setting a SAS data set means extracting a part of the data set by selecting a fewer number of variables or fewer number of observations or both.
+sub setting of variables is done by using KEEP and DROP statement
+sub setting of observations is done using DELETE statement
+
+resulting data from the sub setting operation is held in a new data set which can be used for further analysis. Sub setting is mainly used for the purpose of analyzing a part of the data set without using those variables or observations which may not be relevant to the analysis.
+
+
+Sub seting Variables
+
+DATA Employee; 
+  INPUT empid ename $ salary DEPT $ ; 
+DATALINES; 
+1 Rick 623.3 	IT 		 
+2 Dan 515.2 	OPS	
+3 Mike 611.5 	IT 	
+4 Ryan 729.1    HR 
+5 Gary 843.25   FIN 
+6 Tusar 578.6   IT 
+7 Pranab 632.8  OPS
+8 Rasmi 722.5   FIN 
+;
+RUN;
+DATA OnlyDept;
+ SET Employee;
+ DROP empid salary;
+  RUN;
+ PROC PRINT DATA=OnlyDept; 
+RUN; 
+
+
+DATA OnlyDept;
+ SET Employee;
+ KEEP ename DEPT;
+  RUN;
+ PROC PRINT DATA=OnlyDept; 
+RUN; 
+
+
+
+Sub setting Observations
+
+In this method we extract only few observations from the entire data set.
+
+Syntax
+
+We use PROC FREQ which keeps track of the observations selected for the new data set.
+
+The syntax for sub setting observations is:
+  IF Var Condition THEN DELETE ;
+
+DATA Employee; 
+  INPUT empid name $ salary DEPT $ ; 
+DATALINES; 
+1 Rick 623.3	IT 		 
+2 Dan 515.2 	OPS	
+3 Mike 611.5 	IT 	
+4 Ryan 729.1    HR 
+5 Gary 843.25   FIN 
+6 Tusar 578.6   IT 
+7 Pranab 632.8  OPS
+8 Rasmi 722.5   FIN 
+;
+RUN;
+DATA OnlyDept;
+ SET Employee;
+ IF salary < 700 THEN DELETE;
+  RUN;
+ PROC PRINT DATA=OnlyDept; 
+RUN; 
