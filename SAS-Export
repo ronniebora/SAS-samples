@@ -1,0 +1,126 @@
+ PROC EXPORT
+
+It is a SAS inbuilt procedure used to export the SAS data sets for writing the data into files of different formats.
+
+PROC EXPORT 
+DATA=libref.SAS data-set (SAS data-set-options)
+OUTFILE="filename" 
+DBMS=identifier LABEL(REPLACE);
+
+Following is the description of the parameters used:
+SAS data-set is the data set name which is being exported. SAS can share the data sets from its environment with other applications by creating files which can be read by different operating systems. It uses the inbuilt EXPORT function to out the data set files in a variety of formats. In this chapter we will see the writing of SAS data sets using proc export along with the options dlm and dbms. 
+SAS data-set-options is used to specify a subset of columns to be exported.
+filename is the name of the file to which the data is written into.
+identifier is used to mention the delimiter that will be written into the file. 
+LABEL option is used to mention the name of the variables written to the file.
+
+E.G
+Delimmited Text File
+proc export data=sashelp.cars
+   outfile=
+ '/folders/myfolders/sasuser.v94/TutorialsPoint/car_data.txt'
+   dbms=dlm;
+   delimiter=' ';
+
+
+  run;
+
+CSV Export
+proc export data=sashelp.cars
+   outfile=
+ '/folders/myfolders/sasuser.v94/TutorialsPoint/car_data.csv'
+   dbms=csv;
+  run;
+
+
+Output Delivery System
+The output from a SAS program can be converted to more user friendly forms like .html or PDF. This is done by using the ODS statement available in SAS. ODS stands for output delivery system. It is mostly used to format the output data of a SAS program to nice reports which are good to look at and understand. That also helps sharing the output with other platforms and soft wares. It can also combine the results from multiple PROC statements in one single file.
+
+ODS outputtype
+PATH path name
+FILE = Filename and Path
+STYLE = StyleName
+;
+PROC some proc
+;
+ODS outputtype CLOSE;
+
+PATH represents the statement used in case of HTML output. In other types of output we include the path in the filename.
+Style represents one of the in-built styles available in the SAS environment.
+
+Creating HTML Output
+
+We create HTML output using the ODS HTML statement.In the below example we create a html file in our desired path. We apply a style available in the styles library. We can see the output file in the mentioned path and we can download it to save in an environment different from the SAS environment. Please note that we have two proc SQL statements and both their output is captured into a single file.
+ODS HTML 
+	PATH='/folders/myfolders/sasuser.v94/TutorialsPoint/'
+	FILE='CARS2.html'
+	STYLE=EGDefault;
+proc SQL;
+select make, model, invoice 
+from sashelp.cars
+where make in ('Audi','BMW')
+and type = 'Sports'
+;
+quit;
+
+proc SQL;
+select make,mean(horsepower)as meanhp
+from sashelp.cars
+where make in ('Audi','BMW')
+group by make;
+quit;
+
+ODS HTML CLOSE; 
+
+
+Creating PDF Output
+
+In the below example we create a PDF file in our desired path. We apply a style available in the styles library. We can see the output file in the mentioned path and we can download it to save in an environment different from the SAS environment. Please note that we have two proc SQL statements and both their output is captured into a single file.
+ODS PDF 
+	FILE='/folders/myfolders/sasuser.v94/TutorialsPoint/CARS2.pdf'
+	STYLE=EGDefault;
+proc SQL;
+select make, model, invoice 
+from sashelp.cars
+where make in ('Audi','BMW')
+and type = 'Sports'
+;
+quit;
+
+proc SQL;
+select make,mean(horsepower)as meanhp
+from sashelp.cars
+where make in ('Audi','BMW')
+group by make;
+quit;
+
+ODS PDF CLOSE; 
+
+Creating TRF(Word) Output
+
+In the below example we create a RTF file in our desired path. We apply a style available in the styles library. We can see the output file in the mentioned path and we can download it to save in an environment different from the SAS environment. Please note that we have two proc SQL statements and both their output is captured into a single file.
+ODS RTF 
+FILE='/folders/myfolders/sasuser.v94/TutorialsPoint/CARS.rtf'
+STYLE=EGDefault;
+proc SQL;
+select make, model, invoice 
+from sashelp.cars
+where make in ('Audi','BMW')
+and type = 'Sports'
+;
+quit;
+
+proc SQL;
+select make,mean(horsepower)as meanhp
+from sashelp.cars
+where make in ('Audi','BMW')
+group by make;
+quit;
+
+ODS rtf CLOSE; 
+
+
+
+
+
+
