@@ -1,0 +1,137 @@
+/*
+EXAMPLE 1: CREATE A SERIES OF VARIABLE NAMES FROM ANOTHER VARIABLE'S VALUE
+*/
+
+
+/* (1) Create a sample data set TESTDATA. */ 
+DATA TESTDATA; 
+  INPUT CON; 
+  CARDS; 
+    1 
+    7 
+   34 
+  115 
+    7 
+    1 
+  487 
+   34 
+  506 
+   57 
+    7 
+   43 
+  ; 
+RUN; 
+
+/* (2) Get the unique values of CON. */ 
+PROC SORT DATA=TESTDATA OUT=UNIQUE NODUPKEY; 
+  BY CON; 
+RUN; 
+/* (3) Assign the largest value of CON to the macro variable N. */ 
+DATA _NULL_; 
+  SET UNIQUE END=LAST; 
+  IF LAST THEN CALL SYMPUT('N', PUT(CON, 3.)); 
+RUN; 
+/* (4) Assign the initial value 0 to all macro variables. */  
+DATA _NULL_; 
+  DO I = 1 TO &N; 
+    CALL SYMPUT('M'||LEFT(PUT(I, 3.)), '0'); 
+  END; 
+RUN; 
+/* (5) Assign the value of CON to the corresponding macro variable. */ 
+DATA _NULL_; 
+  SET UNIQUE; 
+  CALL SYMPUT('M'||LEFT(PUT(CON, 3.)), PUT(CON, 3.));  
+RUN; 
+/* (6) Macro to generate dummy variables. */ 
+%MACRO GETCON; 
+  %DO I = 1 %TO &N; 
+  %IF &&M&I = 0 %THEN %GOTO OUT; 
+    IF CON = &&M&I THEN CON&I = 1; 
+    ELSE CON&I = 0; 
+  %OUT: %END; 
+%MEND GETCON; 
+/* (7) Create dummy variables. */ 
+DATA TESTDATA; 
+  SET TESTDATA; 
+  %GETCON 
+RUN; 
+/* (8) Print the result. */ 
+PROC PRINT DATA=TESTDATA; 
+  TITLE 'Table 1. List of CON with dummy variables'; 
+RUN; 
+
+
+
+
+/*
+EXAMPLE 2: GENERATE LABELS FOR A SERIES OF VARIABLES USING EXISTING FORMATS 
+*/
+
+
+DATA FLAGS; 
+  FLAG1 = 1; FLAG2 = 1; FLAG3 = 0; 
+  FLAG4 = 1; FLAG5 = 0; FLAG6 = 1; 
+RUN; 
+PROC FORMAT; 
+  VALUE FMTFLAG 
+  1='Red' 
+  2='Purple' 
+  3='Blue' 
+  4='Yellow' 
+  5='Orange' 
+  6='Green'; 
+RUN; 
+%LET N = 6; 
+DATA _NULL_; 
+  DO I = 1 TO &N; 
+    CALL SYMPUT('FMT'||LEFT(PUT(I, 3.)), PUT(I, FMTFLAG.)); 
+  END; 
+RUN; 
+%MACRO LABELS; 
+  %DO I = 1 %TO &N; 
+    FLAG&I = "&&FMT&I" 
+  %END; 
+%MEND LABELS; 
+DATA FLAGS; 
+  SET FLAGS; 
+  LABEL %LABELS; 
+RUN; 
+PROC CONTENTS DATA=FLAGS; 
+  TITLE 'Table 2. Contents of SAS data set FLAGS showing variable labels'; 
+RUN; 
+
+
+/*
+
+
+EXAMPLE 3: SYMPUT ROUTINE WITH BYTE FUNCTION
+
+*/
+
+
+We can w
+rite the follow
+ing macro to read 
+a numbered series of raw
+ data files w
+ith the same lay
+out to create a series 
+of SAS data sets w
+ith the same 
+names as the raw
+ data files. 
+%MACRO READ(N); 
+  %DO I = 1 %TO &N; 
+    DATA CTY_&I; 
+      INFILE "C:\SUGI29\CTY_&I"; 
+      INPUT ID F96 F97 F98; 
+    RUN; 
+  %END; 
+%MEND READ; 
+
+
+Now
+ let’s suppose we want all the SAS data sets created above to be saved in an alphabetically ordered series of names.  In another word, the SAS data set created from t
+he raw data file CTY_1 will be called CTY_A, the SAS data set from CTY_2 will be called CTY_B, and so on.  We can accomplish this by using the following statement: 
+
+CALL SYMPUT('L', BYTE(&I+64)); 
