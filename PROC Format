@@ -1,0 +1,369 @@
+PROC Format ;
+
+Creating the formatting Range
+;
+
+proc format;
+value range 
+40000-high = 'High'
+26000-<40000 = 'Medium'
+Other = 'Low';
+end;
+
+
+1.Group the data of continuous variable based on conditions above and check the number of observations falling in each groups;
+
+proc freq data = Tmp_cr;
+tables MSRP / nocum;
+format MSRP range.;
+run;
+
+
+2. Group the data of a continuous variable into one categorical variable ;
+data temp_cr;
+set Tmp_cr;
+C_mcrp = put(msrp, range.);
+run;
+
+3. Subset the dataset ;
+
+data temp;
+set sashelp.cars;
+where put(msrp, range.) IN ('High' 'Medium');
+run;
+
+data temp (where = (tsrp IN ('High' 'Medium')));
+set sashelp.cars;
+tsrp = put(msrp, range.);
+run;
+
+proc sql;
+select *,
+put(msrp, range.) as tsrp
+from sashelp.cars
+where calculated tsrp in ('High', 'Medium');
+quit; 
+
+data _null_;
+dt=today();
+put "Day :"  dt  DAY.;
+put "Month :" dt MONTH.;
+put "YEAR:" dt YEAR.;
+put "WEEKDAY:" dt DOWNAME.;
+run;
+/*	Formats and Informats	*/
+
+Input Date 	Date width 	Informat
+03/11/2014 	10 	mmddyy10.
+03/11/14 	8 	mmddyy8.
+December 11, 2012 	20 	worddate20.
+14mar2011 	9 	date9.
+14-mar-2011 	11 	date11.
+14-mar-2011 	15 	anydtdte15.
+;
+
+DATA TEMP;
+INPUT  @1 DOJ1 mmddyy10. @12 DOJ2 mmddyy10. ; *Applying INFORMATS for input read;
+format  DOJ1 date11.  DOJ2 worddate20. ; *Applying FORMATS for output ;
+DATALINES;
+01/12/2012 02/11/1998 
+;
+PROC PRINT DATA=TEMP;
+RUN;
+
+
+
+/* today's date*/
+data _null_;
+a = date();
+b = today();
+c = "&sysdate"d;
+put 'Without Format: ' a = b = c =;
+run; 
+
+data _null_;
+a = date();
+b = today();
+c = "&sysdate"d;
+format a b c ddmmyy10.;
+format a b c date11.;
+put 'With Format: ' a = b = c = ;
+run;
+
+
+data dates;
+date1 = put(date(),mmddyy8.);
+date2 = put(date(),WORDDATE.);
+put date1 date2;
+run; 
+
+
+
+ /*Convert Character Variable to SAS Date*/
+
+The INPUT function is used to convert character variable to numeric. With MMDDYY10. format, we assign format of the date.
+
+    data out;
+    set example;
+    dateofbirth2 = input(strip(dateofbirth),MMDDYY10.);
+    format dateofbirth2 MMDDYY10.;
+    run;
+data out;
+set example;
+dateofbirth2 = input(strip(dateofbirth), MMDDYY10.);
+format dateofbirth2 DDMMYY10.;
+run;
+
+/*convert character dates of DD-MMM-YYYY or DD/MMM/YYY format*/
+
+You can use the format date11. to convert character values in DD-MMM-YYYY format.
+
+    DATA temp;
+         INPUT @6 dt $11.;
+         dt2 = input(strip(dt),date11.);
+         FORMAT dt2 date11.;
+         CARDS;
+         10/JUN/2014
+         ;
+    PROC PRINT NOOBS;
+    RUN;
+
+/*Multiple Character Variables to Date*/
+
+Convert multiple character variables to SAS datevalue format. We can create SAS array to convert them.;
+
+    data example2;
+    input dateofbirth $10. hire $11.;
+    cards;
+    1971-11-21 1991-12-21
+    1980-05-14 1999-10-20
+    ;
+    run;
+
+Real SAS Date values are numeric so numeric array is created for them.
+
+    data out;
+    set example2;
+    array olddates $ dateofbirth hire;
+    array newdates dt1 dt2;
+    do i = 1 to dim(olddates);
+    newdates(i) = input(strip(olddates(i)),yymmdd10.);
+    end;
+    drop i;
+    format dt1-dt2 yymmdd10.;/* these to specify variable dt1 to dt2*/
+    run;
+
+
+	/* Convert from Numberic to date */
+
+In this case first we convert a numberic to character and then we convert them to date format;
+
+data temp;
+input date;
+cards;
+20160514
+19990505
+20131104
+20110724
+;
+run;
+
+data temp1;
+set temp;
+newdate =  input(put(date,8.),yymmdd8.);
+format newdate date10.;
+proc print noobs; run;
+
+
+
+/* SAS Pattern Matching 
+
+
+*/
+
+Data temp ;
+Input company $30.;
+cards;
+Vanucover
+Reliance
+Tata
+Tata Motors
+;
+run;
+
+data temp2;
+    Input company $30.;
+    cards;
+    Tata
+    tata
+    Tataz
+    TataM Jan2015
+    Tata Motor
+    Reliance World
+    Reliance Ltd
+    Reliance #Petro
+    Reliance Global
+    Vanucoverltd 12 Company
+    ;
+    run;
+
+Steps
+
+1. Remove punctuations, special characters, numeric values, dates.
+
+    Company1 = compress(company, '',"ak");
+    Company2 = compbl(PrxChange('s/\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b//i' , -1 , strip(company1)));
+
+- COMPRESS with modifier ak removes punctuations, special characters and numeric values.
+- PRXCHANGE performs a pattern-matching replacement. It is an alternative to TRANWRD which can only replace a single keyword at a time. However, PRXCHANGE can replace multiple keywords at one run.
+Detailed Explanation - PRXCHANGE
+    The 's tells SAS that we want to substitute or replace some keywords. 
+    The /\b(?: tells SAS to use these keywords when they are not grouped with other keywords. For example, It differentiate between 'Smith Jan' and 'JanSmith'. It would replace 'Jan' from 'Smith Jan' but not from 'Jan Smith'.
+    The //i  tells SAS to substitute keywords with blank. If you want to substitute with a keyword 'blank', change //i  to  /blank/i.
+
+
+2. Setting Stopwords such as Corporation, Corp,Ltd, Limited, Inc etc';
+
+    Company3 = compbl(PrxChange('s/\b(?:Corporation|Corp|Ltd|Limited|Inc|Incorporated|Company|Co|LTD|LLC|PLLC)\b//i' , -1 ,Strip(Company2)));
+
+3. Apply fuzzy matching using COMPGED function.
+
+    COMPGED(String1, String2, 400, 'LN')
+
+The COMPGED function returns the generalized edit distance between two strings. In the code, 400 is the cut off. If the actual generalized edit distance is greater than the value of cutoff, the value that is returned is equal to the value of cutoff.
+
+The 'LN' modifier tells SAS to consider the following points before comparing the values
+
+    remove leading blanks in string-1 and string-2
+    remove quotations and ignore case sensitivity.
+
+
+Important Point
+
+The value that is returned by COMPGED(string1, string2) is not always equal to the value that is returned by COMPGED(string2, string1) .
+;
+    data _null_;
+    x = compged('Tata', 'TataM');
+    y = compged('TataM', 'Tata');
+    put x y;
+    run;
+
+
+Full SAS Code : Fuzzy Matching;
+
+    data temp3 (drop = company1 company2);
+    set temp2;
+    company1 = compress(company, '',"ak"); /** Keeping only characters**/;
+    /**Stopwords**/;
+    Company2 = compbl(PrxChange('s/\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b//i' , -1 , strip(company1)));
+    Company3 = compbl(PrxChange('s/\b(?:Corporation|Corp|Ltd|Limited|Inc|Incorporated|Company|Co|LTD|LLC|PLLC)\b//i' , -1 ,Strip(Company2)));
+    run;
+
+    proc sql noprint;
+    create table matrix as
+    select a.Company , a.company3 as cleaned_text, b.Company as Company2, COMPGED(a.Company3, b.Company, 400, 'LN') as GEDSCORE
+    from temp3 a left join temp b
+    on compged(a.company3, b.company, 'LN') < 400
+    group by a.company
+    having GEDSCORE= min(GEDSCORE)
+    order by a.company;
+    quit;
+
+
+Method 2 : Improve Performance of Fuzzy Matching
+
+Since COMPGED on 2 tables returns cartesian product of the two tables, it is a very memory extensive process. Suppose you have two tables - first table contains 100 cases and other table contains 1 million cases, it would return 100 million cases.
+
+Tip : Improve Performance of Fuzzy Matching on large table
+
+    The quick tip to improve performance is to select exact matches outside COMPGED function and excludes these exact match cases when you apply COMPGED function.
+
+    proc sql noprint;
+    **Selecting exact matches;
+    create table matrix as
+    select a.company, a.company3 as cleaned_text, b.company as company2
+    from temp3 a inner join temp b
+    on UPCASE(a.company3) = UPCASE(b.company);
+
+    **Run compged on non-exact matches;
+    create table matrix2 as
+    select a.Company , a.company3 as cleaned_text, b.Company as Company2,
+    COMPGED(a.Company3, b.Company, 400, 'LN') as GEDSCORE
+    from temp3 a left join temp b
+    on compged(a.company3, b.company, 'LN') < 400
+    where a.company NOT IN (Select company from matrix)
+    group by a.company
+    having GEDSCORE= min(GEDSCORE)
+    order by a.company;
+
+    **Joining exact and non-exact matches;
+    create table matrix3 (drop = GEDSCORE2) as
+    select *,
+    case when GEDSCORE2 = . then 0 ELSE GEDSCORE2 END AS GEDSCORE
+    from
+    (select * from matrix
+    union
+    select * from matrix2 (rename = (GEDSCORE = GEDSCORE2)));
+    quit;
+
+Fuzzy Matching with Multiple Criteria
+
+Suppose you have multiple primary keys to match with the other tables. For example, you have Company Name, Address and PIN.
+
+Sample Datasets
+
+    Data xx ;
+    Input company $1-12 PIN 13-30;
+    cards;
+    Vanucover    110051
+    Reliance     112345
+    Tata         140000
+    Tata Motors  125432
+    ;
+    run;
+    data xx2;
+    Input company $15. PIN 16-30;
+    cards;
+    Tata           140000
+    tata           140000
+    Tataz          125433
+    TataM Jan2015  125432
+    Tata Motor     125432
+    Reliance World 112345
+    Reliance Ltd   113345
+    Reliance #Petro 113007
+    Reliance Global 113600
+    Vanucoverltd 12 110051
+    ;
+    run;
+
+SAS Code : Fuzzy Matching with Multiple Criteria
+
+    data example2 (drop = company1 company2);
+    set xx2;
+    company1 = compress(company, '',"ak"); /** Keeping only characters**/;
+    /**Stopwords**/;
+    Company2 = compbl(PrxChange('s/\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b//i' , -1 , strip(company1)));
+    Company3 = compbl(PrxChange('s/\b(?:Corporation|Corp|Ltd|Limited|Inc|Incorporated|Company|Co|LTD|LLC|PLLC)\b//i' , -1 ,Strip(Company2)));
+    run;
+
+    proc sql noprint;
+    create table matrix2 as
+    select a.Company , a.company3 as cleaned_name, b.Company as Company2, a.PIN, b.PIN as PIN2,
+    COMPGED(a.Company3, b.Company, 'LN') as GEDSCORE_Co,
+    COMPGED(PUT(a.PIN,10.), PUT(b.PIN,10.)) as GEDSCORE_PIN,
+    calculated GEDSCORE_Co + calculated GEDSCORE_PIN as GEDSCORE
+    from example2 a left join xx b
+    on COMPGED(a.Company3, b.Company, 'LN') <= 400 OR COMPGED(PUT(a.PIN,10.), PUT(b.PIN,10.)) <=200
+    group by a.company
+    having GEDSCORE = MIN(GEDSCORE)
+    order by a.company;
+    quit;
+
+Important Tips 
+
+Stopwords for Addresses
+
+    Addresses = PrxChange('s/\b(?:(NORTH|SOUTH|EAST|WEST|STREET|ST|AVENUE|AVE|LANE|LN|PARKWAY|PKWY|WAY|ROAD|RD|DRIVE|DR|
+    PLACE|PL|CIRCLE|CIR|COURT|CT|PIKE|TERRACE|TER|TRAIL|TRL|TL|BOULEVARD|BLVD)\b//i',-1 ,Strip(_Addresses));
+
