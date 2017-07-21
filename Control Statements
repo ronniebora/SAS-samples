@@ -1,0 +1,379 @@
+
+/*Control statements */
+Data readin;
+Input ID Q1-Q3;
+cards;
+85 1 2 3
+90 3 4 6
+95 5 5 6
+100 6 6 4
+105 5 5 6
+110 6 6 5
+;run;
+/*
+1. IF statement
+IF (condition is true) => It means subsetting a dataset.
+IF ID LE 100 => This would tell SAS to retain only those IDs whose values are less than or equal to 100. In other words, you are removing IDs whose values are greater than or equal to 100.;
+*/
+Data readin1;
+Set readin;
+IF ID LE 100;
+run; 
+/*
+2. IF-THEN DELETE
+IF (condition is true) THEN (delete the selected observations)
+IF ID GT 100 THEN DELETE => This would tell SAS to remove all the IDs whose values are greater than 100;
+*/
+Data readin1;
+Set readin;
+IF ID GT 100 THEN DELETE;
+proc print noobs; run; 
+/*
+3.IF-THEN-ELSE Statement
+IF (condition is true) THEN (perform this action);
+ELSE (perform the action that is set when condition is false);
+
+
+IF-THEN-ELSE IF Statement
+IF (condition is true) THEN (perform this action);
+ELSE IF (perform the action when second condition is true);
+ELSE IF (perform the action when third condition is true);
+*/
+
+Data readin;
+Input ID Q1-Q3;
+cards;
+85 1 2 3
+90 3 4 6
+95 5 5 6
+100 6 6 4
+105 5 5 6
+110 6 6 5
+;
+
+Data readin1;
+Set readin;
+IF ID LE 100 THEN TAG ="Old";
+ELSE TAG ="New";
+proc print noobs; run;
+
+Data readin;
+Input ID Q1-Q3;
+cards;
+70 1 2 3
+45 1 2 3
+85 1 2 3
+25 1 2 3
+90 3 4 6
+95 5 5 6
+100 6 6 4
+105 5 5 6
+110 6 6 5
+;run;
+
+Data readin1;
+Set readin;
+length TAG $20;
+IF ID < 75 THEN TAG ="Old";
+ELSE IF 75 <= ID < 100 THEN TAG = "New"; 
+ELSE IF ID >= 100 THEN TAG ="Unchecked";
+proc print ; run; 
+
+/*IN Operator
+
+IN operator is used to select multiple values of a variable. It is an awesome alternative to OR operator.*/
+
+
+/* WHERE */
+/*The WHERE statement is an alternative to IF statement when it comes to subsetting a data set.
+WHERE (condition is true) => It means subsetting a dataset. where section EQ "A" => This would tell SAS to select only section A values.
+You can also write where section = "A". This statement serves the same purpose.
+*/
+data readin;
+input name $ Section $ Score;
+cards;
+Tom  A 84
+Raj  A 80
+Ram  B 71
+Atul A 77
+Priya B 45
+Sandy A 67
+Sam  A 57
+David B 39
+Wolf B 34
+Rahul A 95
+Sahul C 84
+Lahul C 44
+;
+proc print; run;
+
+data readin1;
+set readin;
+where Section EQ "A";
+proc print noobs; run;
+
+
+data readin1;
+set readin;
+where section IN ("A","B");
+proc print noobs; run;
+
+/*Suppose you want to select scores whose values are greater than or equal to 50 and less than or equal to 75.
+where Score between 50 and 75 => This would tell SAS to select values through 50 and 75 (not 51 to 74)
+where Score GE 50 and Score LE 75 also can be written*/
+
+data readin1;
+set readin;
+where score between 50 and 75; 
+proc print noobs ; run ; 
+
+data readin1;
+set readin;
+where score GE 50 and LE 75; 
+proc print noobs ; run ; 
+
+
+
+
+/* IS MISSING and IS NOT MISSING*/
+/*
+Where section is missing => This would tell SAS to select missing values for variable SECTION.
+Where section is not missing => This would tell SAS to select non-missing values.
+*/
+
+data readin;
+input name $ Section $ Score;
+cards;
+Tom  A 84
+Raj  A 80
+Ram  B 71
+Atul . 77
+Priya . 45
+Sandy A 67
+Sam  A 57
+David B 39
+Wolf B 34
+Rahul . 95
+Sahul C 84
+Lahul C 44
+;
+run;
+
+data readin1;
+set readin;
+where Section is missing;
+proc print noobs; run;
+
+data readin1;
+set readin;
+where Section is NOT missing;
+proc print noobs; run;
+
+
+/*CONTAINS Operator : Searching specific character*/
+/*
+where name contains 'hul' => This would tell SAS to select observations having the values Rahul, Sahul and Lahul for the variable NAME.
+The CONTAINS operator is case sensitive.
+
+*/
+
+data reading1;
+set readin;
+where name CONTAIN 'hul';
+proc print noobs; run; 
+
+
+/*LIKE Operator : Pattern Matching
+
+ The LIKE operator selects observations by comparing the values of a character variable to a specified pattern. It is case sensitive.
+There are two special characters available for specifying a pattern:
+
+ 1. percent sign (%) - Wildcard Character
+
+ 2. underscore ( _ ) - Fill in the blanks
+*/
+
+data readin;
+input name $ Section $ Score;
+cards;
+Tom  A 84
+Raj  A 80
+Ram  B 71
+Atul . 77
+Priya . 45
+Sandy A 67
+Sam  A 57
+David B 39
+Wolf B 34
+Rahul . 95
+Sahul C 84
+Lahul C 44
+Pahulk A 81
+;
+run;
+
+data readin1;
+set readin;
+where name like 'S%';
+proc print noobs; run;
+
+data readin1;
+set readin;
+where name like '%h_l%';
+proc print noobs; run;
+
+
+/*Sounds-like Operator : Selecting sound like characters
+*/
+
+data readin1;
+set readin;
+where name = *'Rahul';
+proc print noobs; run;
+
+/*
+WHERE = Data Set Option
+
+1. In the example shown below, the WHERE= data set option is used to select only section A data.
+
+ data readin1 (where = (section ='A'));
+set readin;
+run;
+
+ 2. The following example shows how to use WHERE= data set option in procedures 
+proc print data=readin (where=(section='A'));
+run;
+
+ In this case, you can also use WHERE statement....
+proc print data=readin;
+where section='A';
+run;
+
+
+/*
+WHERE condition wins against IF condition in the following cases :
+
+1. The WHERE statement can be used in procedures to subset data while IF statement cannot be used in procedures.
+2. WHERE can be used as a data set option while IF cannot be used as a data set option.
+3. The WHERE statement is more efficient than IF statement. It tells SAS not to read all observations from the data set.
+4. The WHERE statement can be used to search for all similar character values that sound alike while IF statement cannot be used.
+
+IF condition wins against WHERE condition in the following cases :
+
+ 1. When reading data using INPUT statement.
+2. When it is required to execute multiple conditional statements
+This can be easily done using IF-THEN-ELSE IF statements. However, WHERE statement requires variables to exist in the data set.
+3. When it is required to use newly created variables in data set.
+IF statement can be applied on a newly created variable whereas WHERE statement cannot be applied on a newly created variable. In the below example, IF statement doesn't require variables to exist in the READIN data set while WHERE statement requires variable to exist in the data set.
+4. When to Use _N_, FIRST., LAST. Variables
+WHERE statement cannot be applied on automatic variables such as _N_, First., Last. Variables. While IF statement can be applied on automatic variables.
+*/
+
+
+/*WHERE and IF when merging data sets
+Example
+*/
+
+data ex1;
+input ID Score;
+cards;
+1 25
+2 28
+3 35
+4 45
+;
+proc print noobs; run;
+
+data ex2;
+input ID Score;
+cards;
+1 95
+2 97
+;
+proc print noobs; run;
+
+data comb;
+merge ex1 ex2;
+by ID;
+where score <= 30;
+proc print noobs; run;
+/*
+It returns 2 observations. WHERE condition applied before merging. It applies separately on each of the 2 data sets before merging.*/
+
+data comb;
+merge ex1 ex2;
+by ID;
+if score <= 30;
+proc print noobs; run;
+
+
+/* Dropping variables from a data set in SAS */
+
+
+DATA outdata; 
+   INPUT age gender $ dept obs1 obs2 obs3; 
+   DATALINES; 
+1 F 3 17 6 24
+1 M 1 19 25 7
+3 M 4 24 10 20
+3 F 2 19 23 8
+2 F 1 14 23 12
+2 M 5 1 23 9
+3 M 1 8 21 7
+1 F 1 7 7 14
+3 F 2 2 1 22
+1 M 5 20 5 2
+3 M 4 21 8 18
+1 M 4 7 9 25
+2 F 5 10 17 20
+3 F 4 21 25 7
+3 F 3 9 9 5
+3 M 3 7 21 25
+2 F 1 1 22 13
+2 F 5 20 22 5
+;
+proc print;
+run;
+/*DROP statement can be used anywhere in DATA steps whereas DROP = option must follow the SET statement.
+By using the DROP statement, we can command SAS to drop variables only at completion of the DATA step.
+DROP statement can be used in DATA steps only whereas DROP = option can be used in DATA steps and PROC steps (for printing)
+
+I.  Scenario : Create a new variable based on existing data and then drops the irrelevant variables*/
+ data readin;
+ set outdata;
+ totalsum = sum(obs1,obs2,obs3);
+drop obs1 obs2 obs3;
+ run;
+
+ data readin;
+set outdata;
+if gender = 'F';
+drop age height;
+run;
+
+data readin;
+set outdata;
+drop age height;
+if gender = 'F'; 
+run;
+
+/* In the above example, we simply ask SAS sum up all the values in variables obs1,obs2 and obs3 to produce a new variable totalsum and then drop the old variables obs1,obs2 and obs3.
+
+DROP = Option
+The variables obs1,obs2 and obs3 are not available for use after data set outdata has been copied into the new data set readin . Hence totalsum would contain missing values only
+*/
+ data readin;
+ set outdata (drop = obs1 obs2 obs3);
+ totalsum = sum(obs1,obs2,obs3);
+ run;
+
+data readin; 
+set outdata (drop = age height);
+if  gender = 'F';
+run;
+
+
+
+
+
+
