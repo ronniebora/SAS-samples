@@ -1,0 +1,96 @@
+# 2 PROC TRANSPOSE;
+
+PROC TRANSPOSE helps to reshape data in SAS. Its a very powerful procedure when you need to change the shape of the data. 
+For example, you have data in vertical (long) format and you are asked to change it to horizontal (wide) format. It can be done via data step as well but it would be a complex code which takes a lot of time to write and test it. To save programming time and maintaining the accuracy of the code, we should use TRANSPOSE procedure to restructure data.
+
+ * by default, PROC TRANSPOSE transposes all numeric variables in the data set.
+data transp;
+input Name $ Subject $ Marks;
+cards;
+Samma Maths 96
+Sandy English 76
+Devesh German 76
+Rakesh Maths 50
+Priya English 62
+Kranti Maths 92
+William German 87
+;
+run;
+
+proc transpose data = transp out = outdata;run;
+
+1. The NAME= option allows you to change the name of the _NAME_ variable. It is the name of the variable that is transposed.
+2. The PREFIX= option allows you to change the prefix "COL". It is prefix to the transposed values.
+;
+proc transpose data = transp 
+name=VarName prefix=Student out= outdata;
+run;
+
+
+1. ID - [Move to Column Name] It allows you to include the values of a variable as variable names in the output data set. In other words, it tells SAS to give the variable names in the output file which were observations (rows) values in a variable in the input data set. If the variable in the ID statement is numeric, an underscore will be put by default at the beginning of the variable name. Instead of a default '_', you can use PREFIX= option to give a specific prefix which can be any character value. For example, you want to add 'Height' as a prefix which would create variables like 'Height20' 'Height 30'.
+
+2. BY - It allows you to transpose data within the combination of the BY variables. The BY variables themselves aren’t transposed. The variables need to be sorted before running PROC TRANSPOSE. You can sort the variables with PROC SORT.
+
+3. VAR - [Transpose Column] It lists the actual data that needs to be transposed. If you do not include a VAR statement, the procedure will transpose all numeric variables that are not included in a BY statement or a ID statement. If you want to transpose a character variable, a VAR statement is required.
+;
+proc transpose data = transp 
+name=VarName prefix= Student_ out= outdata;
+id name;
+run;proc print data = outdata; run;
+
+proc sort data = transp;
+by Name;
+run;
+
+proc transpose data = transp out = outdata;
+by Name;
+id Subject;
+var Marks;
+run;
+proc print data = outdata; run;
+
+
+If you dont specify NOTSORTED option, you need to sort the variable that is listed in BY statement.
+;
+proc transpose data = transp out = outdata;
+by Name NOTSORTED;
+id Subject;
+var Marks;
+run;
+proc print data = outdata; run;
+
+
+Two Variables in ID Statement
+We can use DELIMITER= option to separate values of two variables specified in the ID statements. In this example, we have used underscore ( _ ) as a delimiter.
+;
+proc transpose data = transp out = outdata delimiter= _;
+id Name Subject;
+var Marks ;
+run;
+proc print data = outdata; run;
+
+
+EXample :
+data example;
+input ID Months Revenue Balance;
+cards;
+101 1 3 90
+101 2 33 68
+101 3 22 51
+102 1 100 18
+102 2 58 62
+102 3 95 97
+;
+
+proc transpose data=example out= Output1 (drop = _NAME_) prefix=balance_;
+id months;
+var balance;
+by ID;
+run;
+proc print data = Output1; run;
+
+proc transpose data=example out=out1 name=variable prefix=x;
+by Months NOTSORTED;
+id id;
+run;
+proc print data = Out1; run;
