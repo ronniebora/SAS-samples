@@ -1,0 +1,481 @@
+/* Date functions */
+
+data date_functions;
+INPUT @1 date1 date9. @11 date2 date9.;
+format date1 date11.  date2 date11.;
+
+/* Get the interval between the dates in years*/
+Years_ = INTCK('YEAR',date1,date2);
+
+/* Get the interval between the dates in months*/
+months_ = INTCK('MONTH',date1,date2);
+
+/* Get the week day from the date*/
+weekday_ =  WEEKDAY(date1);
+
+/* Get Today's date in SAS date format */
+today_ = TODAY();
+
+/* Get current time in SAS time format */
+time_ = time();
+DATALINES;
+21OCT2000 16AUG1998
+01MAR2009 11JUL2012
+;
+proc print data = date_functions noobs;
+run;
+
+
+data _null_;
+dt=today();
+put "Day :"  dt  DAY.;
+put "Month :" dt MONTH.;
+put "YEAR:" dt YEAR.;
+put "WEEKDAY:" dt DOWNAME.;
+run;
+
+
+data date_fuctions_;
+input @1 date1 date11. @14 date2 date9.;
+format date1 date11. date2 worddate22.;
+time_= time();
+today_= TODAY();
+weekday_ = WEEKDAY(date1);
+years_= INTCK('YEAR',date1,date2);
+months_= INTCK('MONTH',date1,date2);
+datalines;
+21-Oct-2001 16oct1986
+;
+
+proc print data = date_fuctions_ noobs;
+run;
+
+
+data _null_;
+CALL SYMPUT ('today',TRIM(PUT("&sysdate"d,worddate22.)));
+run;
+%put &today;
+
+%put &sysdate;
+
+
+/* today's date*/
+data _null_;
+a = date();
+b = today();
+c = "&sysdate"d;
+put 'Without Format: ' a = b = c =;
+run; 
+
+data _null_;
+a = date();
+b = today();
+c = "&sysdate"d;
+format a b c ddmmyy10.;
+format a b c date11.;
+put 'With Format: ' a = b = c = ;
+run;
+
+
+data _null_;
+birthdt = '22oct91'd;
+date1 = day(birthdt);
+date2 = month(birthdt);
+date3 = year(birthdt);
+date4 = qtr(birthdt);
+date5 = weekday(birthdt);
+put date1 date2 date3 date4 date5;
+run;
+
+/* DATDIF and INTCK 
+
+ 'ACT' refers to the actual number of days between dates. 
+Each month is considered to have the actual number of calendar days in that month, and each year is considered to have the actual number of calendar days in that year.
+*/
+
+data _null_;
+birthdt = '22oct91'd;
+date5 = datdif(birthdt, date(), 'ACT/ACT');
+date55 = intck('day',birthdt, date());
+date6 = intck('year',birthdt, date());
+date7 = intck('qtr',birthdt, date());
+date8 = intck('week',birthdt, date());
+put date5 date55 date6 date7 date8;
+run;
+
+INTCK(date-or-time-interval, start-date-or-time, end-date-or-time, [method]);
+
+data temp;
+date1 = '01JAN2015'd;
+date2 = '01JAN2017'd;
+no_of_years  = intck ('YEAR', date1, date2);
+no_of_semiyears  = intck ('SEMIYEAR', date1, date2);
+no_of_quarters  = intck ('QUARTER', date1, date2);
+no_of_months  = intck ('MONTH', date1, date2);
+no_of_weeks  = intck ('WEEK', date1, date2);
+no_of_days  = intck ('DAY', date1, date2);
+format date1 date2 date9.;
+proc print data = temp noobs;
+run;
+
+
+Custom Intervals
+
+data temp;
+date1 = '01JAN2015'd;
+date2 = '01JAN2017'd;
+format date1 worddate. date2 worddate.;
+no_of_4months  = intck ('MONTH4', date1, date2);
+no_of_2years = intck('YEAR2', date1, date2);
+no_of_yr_wd_3 = intck ('YEAR.3', date1, date2); /*It checks number of times first of March appears as YEAR.3 refers to the period starting from 1st of March to end of February next year. The variable diff2 returns 2 as it includes 01 March 2015 and 01March 2016.*/
+month1= intck('month', '25OCT2016'd, '03NOV2016'd);
+month1_c= intck('month', '25OCT2016'd, '03NOV2016'd, 'C');/*The CONTINUOUS method calculates continuous time from the start-of-period date specified in the second parameter of INTCK function.*/
+month2= intck('month', '01OCT2016'd, '31OCT2016'd);
+weekdays = intck('WEEKDAY', '11DEC2016'd ,'18DEC2016'd);/*saturday and sunday are considered weekends*/
+weekdays_1 = intck('WEEKDAY1W', '11DEC2016'd ,'18DEC2016'd);/*WEEKDAY1W implies sunday as weekend (1=Sunday, 2= MONDAY... 7=Saturday)*/
+weekdays_24 = intck('WEEKDAY24W', '11DEC2016'd ,'16DEC2016'd);/*WEEKDAY24W means MONDAY and WEDNESDAY are weekends.*/
+hours=intck('hour','01jan2016:10:50:00'dt,'01jan2016:11:55:00'dt);
+minutes=intck('minute','01jan2016:10:50:00'dt,'01jan2016:11:55:00'dt);
+seconds=intck('second','01jan2016:10:50:00'dt,'01jan2016:11:55:00'dt);
+run;
+proc print data = temp; run;
+
+data temp3;
+hours=intck('hour','12:00:00't, '23:05:00't);
+minutes=intck('minute','12:00:00't,'23:05:00't);
+seconds=intck('second','12:00:00't,'23:05:00't);
+proc print noobs;
+run;
+
+
+/*  SAS INTNX : Introduction
+
+SAS function INTNX is used to increment SAS date by a specified number of intervals. It helps to answer the following questions.
+
+Examples 
+
+    When is next Monday?
+    When was last Friday?
+    What would be date after 21 weeks?
+    Subtract 2 quarters from the current date
+*/
+
+INTNX(interval, start-from, increment,  [alignment]);
+
+data temp_intnx;
+mydate = '02JAN2017'd;
+day=intnx('day', mydate , 7);/*Add 7 days to a specific date*/
+nextsunday=intnx('week', mydate , 1); /*next sunday */
+firstday=intnx('month', date , 0);/*Get First Date*/
+lasttuesday1 = intnx('week.3', mydate , 0);/*When was Last Tuesday?*/
+lasttuesday2= intnx('week.4', mydate , -1, 'end');/* last tuesday correct menthod*/
+beginning=intnx('year ', mydate , 1, 'b');
+middle=intnx('year ', mydate , 1, 'm');
+end=intnx('year ', mydate , 1, 'e');
+sameday=intnx('year ', mydate , 1, 's');
+/*The abbreviation 'b' refers to beginning, 'm' - middle,  'e' - end, 's' - sameday. The default value is 'b' if you don't specify anything in the fourth parameter.*/
+seconds=intnx('second', mydt , 1);
+minutes=intnx('minute', mydt , 1);
+hours=intnx('hour', mydt , 1);
+days=intnx('dtDay', mydt , 1);
+weeks=intnx('dtWeek', mydt , 1);
+format mydt seconds minutes hours days weeks datetime20.;
+format mydate beginning middle end sameday date9.;
+format mydate lasttuesday1 date9.;
+format mydate lasttuesday2 date9.;
+format firstday date9.;
+format mydate nextsunday date9.;
+format mydate day date9.;
+run;
+proc print data = temp_intnx; run;
+
+
+
+/* String Fucntions */
+
+data character_functions;
+/* Convert the string into lower case */
+lowcse_ = LOWCASE('HELLO');
+/* Convert the string into upper case */
+upcase_ = UPCASE('hello');  
+/* Reverse the string */
+reverse_ = REVERSE('Hello');
+/* Return the nth word */
+nth_word_ = SCAN('Learn SAS Now',2);
+name = "Moni mugdha Bora";
+name1 = '3+3=6';
+x2 = LENGTH(name);
+x = count(name,"a");
+x1 = count(name,"a","i");
+x3 = countw(name);
+x4 = countw(name1);	
+x5 = countw(name1,''); /*using delimiter (space) in COUNTW*/
+put x= x1= x2= x3= x4= x5=;
+run;
+
+proc print data = character_functions noobs;
+run;
+
+
+
+data char_temp;
+text1 = 'Sandy  david';
+text2 = '  moni  mugdha bora ' ;
+char1 = compbl(text1);/*It compresses multiple blanks to a single blank. */
+char2 = strip(text2);/*It removes leading and trailing spaces.*/
+chr3 = compress(text2);/*It removes leading, between and trailing spaces*/
+chr4 = compbl(string(text2));
+run;
+proc print data = char_temp; run;
+
+
+data compress_function;
+x='ABCDEF-!1234';
+str1=compress(x,'','ak');/*Keep only alphabets from alphanumeric values*/
+str2=compress(x,'','kd');/*Keep only numeric from alphanumeric*/
+str3=compress(x,'','p')/*Remove all punctuation from string*/
+str4=compress(x,'0123456789.','k');/*Keep Integer Values from String*/
+run;
+proc print data = compress_function noobs; run;
+
+
+COMPRESS(String, characters to be removed, Modifier);
+
+/*Remove specific characters*/
+data _null_;
+x='ABCDEF-!1.234';
+string=compress(x,'!4');put string=;
+run;
+/* use of modified */
+ The following keywords can be used as modifiers-
+
+    a – Remove all upper and lower case characters from String.
+    ak - Keep only alphabets from String.
+    kd - Keeps only numeric values
+    d – Remove numerical values from String.
+    i – Remove specified characters both upper and lower case from String.
+    k – keeps the specified characters in the string instead of removing them.
+    l – Remove lowercase characters from String.
+    p – Remove Punctuation characters from String.
+    s – Remove spaces from String. This is default.
+    u – Remove uppercase characters from String.
+;
+
+data _null_;
+x='ABCDEF-!1.234';
+string=compress(x,'0123456789.','k');put string=;
+run;
+
+/* LEFT, TRIM Function, TRIM(LEFT(string))*/
+
+data _null_;
+txt = ' moni mugdha   bora ';
+t1 = left(txt);
+t2 = trim(txt);
+t3 = trim(left(txt));
+t4 = trim(compbl(txt));
+put t1= t2= t3= t4=;
+run;
+
+/*CAT Functions - CAT or ||, CATS, CATX
+Concatenate String and Numeric Value
+
+
+*/
+
+data _null_;
+x = "Moni";
+u= " Bora";
+y = 22;
+z = x||y;/*The || keyword inserts multiple spaces when numeric and text values are concatenated.*/
+z1 = cats(x,y);/*CATS strips both leading and trailing blanks, and does not insert separators.*/
+z2 = catx("",x,y);/*CATX strips both leading and trailing blanks, and inserts separators. The first argument to CATX specifies the separator.*/
+z3 = x||u;
+put z = z1= z2 = z3=;
+run;
+
+
+/*truncation functions */ 
+
+data trunc_functions;
+/* Nearest greatest integer */
+ceil_ = CEIL(11.85);
+/* Nearest greatest integer */
+floor_ = FLOOR(11.85);
+/* Integer portion of a number */
+int_ = INT(32.41);
+/* Round off to nearest value */
+round_ = ROUND(5621.78);
+/* SUBSTR - It extracts strings based on character position and length.
+substr(old_var, starting_position, number of characters to keep); */
+t="AFHood Analytics Group";
+new_var=substr(t,8,9);
+run;
+
+proc print data = trunc_functions noobs;
+run;
+
+
+/*INDEX, FIND Function*/
+
+INTEX - It finds characters or words in a character variable;
+
+data _null_;
+string='Hi,How are you doing?';
+x = index(string, "How");
+put x=;
+run;
+
+--To select all the records having 'ian' in their character.;
+if index(name,'ian') > 0;
+
+To select all the records having first letter 'H';
+if name =: 'H';
+
+
+FIND- To locate a substring within a string
+FIND (character-value, find-string <,'modifiers'> <,start>);
+
+data _null);
+STRING1 = "Hello hello goodbye";
+t1 = FIND(STRING1, "hello");
+t2 = FIND("abcxyzabc","abc",4);
+put t1= t2= ;
+run;
+
+/*TRANWRD Function | TRANSLATE Function*/
+TRANWARD - It replaces all occurrences of a word in a character string. It doesnt replace full phrase (entire value content). The TRANSLATE function converts every occurrence of a user-supplied character to another character.
+TRANWRD (variable name, find what , replace with)
+
+TRANSLATE - It replaces specific characters in a character expression. The TRANWRD function differs from TRANSLATE in that it scans for words (or patterns of characters) and replaces those words with a second word (or pattern of characters).
+TRANSLATE(source, replace with, find what)
+
+;
+data _null_;
+name = 'Mrs. Joan Smith';
+name=tranwrd(name, "Mrs.", "Ms.");
+x = translate('XYZW','AB','VW');
+put x= name= ;
+run;
+
+
+/*PRXMATCH */
+
+It can be used for the following cases :
+
+    When you want to identify if there is alphanumeric (has any letter from A to Z) in a variable.
+    If you need to search a character variable for multiple different substrings.
+
+    PRXMATCH (perl-regular-expression, source);
+
+Perl Regular Expression
+
+    ^ - start with 
+    $ - end with 
+    \D - any non digits 
+    \d - digits 
+    ? - may or may not have? 
+    | - or 
+    * - repeating 
+    ( i:) - turns ON the case insensitive search
+    (-i:) - turn OFF the case insensitive search
+;
+
+1. Check alpha numerci value
+
+prxmatch("/[a-zA-Z]/",string) checks first character.
+;
+DATA test;
+    INPUT string $ 1-8;
+    prxmatch=prxmatch("/[a-zA-Z]/",string);
+    CARDS;
+    ACBED
+    11
+    12
+    zx
+    11 2c
+    abc123
+    ;
+    run; 
+
+
+2. Replace multiple words with a new word
+
+    if prxmatch('/Luthir|Luthr|Luther/',name) then name='Luthra' ;
+
+
+
+/* INPUT and PUT Function*/
+INPUT Function is used to convert character variable to numeric.
+new_num=input(character-variable, 4.);
+PUT Function is used to convert numeric variable to character.
+new_char=put(numeric,4.0);
+data _null_;
+x = '12345';
+new_x = input(x,5.);
+new_x1 = put(new_x, 4.0);
+put new_x = new_x1=;
+run;
+
+first convert the x into character and them use STRIP to remove spaces and then find the LENGHT of the string ;
+
+data _null_;
+x = 12345;
+cnt = length(strip(put(x,12.)));
+put cnt=;
+run;
+
+
+
+COALESCE
+
+The COALESCE function is used to select the first non-missing value in a list of variables. In other words, it returns the first non-blank value of each row.
+;
+data temp;
+input ID x1-x4;
+cards;
+1 . 89 85 .
+2 79 . 74 .
+3 80 82 86 85
+;
+run;
+
+First Non-Missing Value;
+
+    data want;
+    set temp;
+    first_non_miss = coalesce(of x1-x4);
+    run;
+
+	proc sql;
+select *, coalesce(x1,x2,x3,x4) as first_non_miss
+from temp;
+quit;
+
+
+Last Non-Missing Value;
+data want;
+set temp;
+last_non_miss = coalesce(of x4-x1);
+run;
+
+
+
+
+
+
+
+
+
+
+
+data misc_functions;
+/* State Code for a Zip in U.S.A */
+state2=zipstate('01040');
+/* Amortization calculation */
+payment=mort(50000, . , .10/12,30*12);
+
+proc print data = misc_functions noobs;
+run;
+
+
