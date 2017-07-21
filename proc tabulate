@@ -1,0 +1,84 @@
+PROC Tabulate 
+Used to generate tables/grids from datasets. Mostly for presentation and reporting.
+This is more like an excel pivoting option
+VAR : The Var statement tells SAS that these variables are analysis variables. They must be numeric. They are used to create summary statistics.
+CLASS : The Class statement tells SAS that these variables are categorical variables.
+TABLE : The Table statement tells SAS which variables are row expressions, which are column expressions.
+
+Table <var>; -  If there are no commas in the TABLE statement, SAS assumes you are only defining the column expression. 
+Table <var1>,<var2>; -  If there is one comma, then it is a row expression before comma and column expression after comma.
+
+Default aggregation is SUM. 
+Others - COLPCTN, COLPCTCUM, MAX, MEAN, MEDIAN, MIN, N, NMISS, PCTN, PCTSUM, ROWPCTN, ROWPCTSUM, STDDEV, STDERR, SUM, VAR
+
+
+Visit for more details - http://3.bp.blogspot.com/-jklkdjlEgvA/U8vk91U7Z4I/AAAAAAAADKU/mt1KH5ORpOw/s1600/tab3.png
+
+;
+
+
+**this will give the sum of metrics;
+proc tabulate data = tmp_cr;
+var Wheelbase;
+class Make;
+table Make, Wheelbase;
+run;
+**this will give the count of metrics;
+proc tabulate data = tmp_cr;
+class Make;
+var Wheelbase;
+table Make, Wheelbase * (N);
+run;
+**this will give the count, and column percent of metrics;
+proc tabulate data = tmp_cr;
+class Make;
+var Wheelbase;
+table Make, Wheelbase * (N COLPCTN);
+run;
+**with formatting ;
+proc tabulate data = tmp_cr;
+class Make;
+var Wheelbase;
+table Make, Wheelbase="Wheelbase size" * (N="Count" COLPCTN="%");
+run;
+proc tabulate data = tmp_cr;
+Keylabel N="Count" COLPCTN="%";
+class Make;
+var Wheelbase;
+table Make, Wheelbase * (N COLPCTN);
+run;
+proc tabulate data = tmp_cr;
+Keylabel N="Count" COLPCTN="%";
+class Make;
+var Wheelbase;
+table Make="", Wheelbase * (N COLPCTN)/ box = "Make";
+run;
+**Adding total rows and columns ;
+proc tabulate data = tmp_cr;
+class Make;
+Var MSRP;
+table Make ALL = "Grand Total", MSRP = "Market Price" * (SUM = "Sum");
+run;
+**Two level cuts of Data ;
+proc tabulate data = tmp_cr;
+class Make DriveTrain;
+Var MSRP;
+table MSRP = "Market Price",(Make = "Make" * DriveTrain="Drive Type") * (SUM = "Sum" ROWPCTN="%");
+run;
+proc tabulate data = tmp_cr;
+class Make DriveTrain;
+Var MSRP;
+table MSRP = "Market Price",(Make * DriveTrain="Car Type") * (SUM = "Sum" ROWPCTN="%");
+run;
+** Three Way tabulation;
+Proc tabulate data = tmp_cr F=6.0;
+Class Make DriveTrain Origin;
+Var Horsepower;
+Table Make=" " * DriveTrain=" ", Origin*Horsepower=" "*(N="Count" ROWPCTN="%") / Box="Make DriveTrain";
+Run;
+
+Proc tabulate data = tmp_cr out = test1;
+Class Make DriveTrain Origin;
+Var Horsepower;
+Table Make=" " * DriveTrain=" ", Origin*Horsepower=" "*(N="Count" ROWPCTN="%") / Box="Make DriveTrain";
+Run;
