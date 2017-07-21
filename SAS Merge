@@ -1,0 +1,182 @@
+SAS Merge
+Step 1 : Both the data sets must be SORTED by the variable you want to use for merging
+Step 2 : The variable you want to use for merging must have same name in both the datasets
+The IN= option tells SAS to create a flag that has either the value 0 or 1. If the observation does not come from the dataset, then the flag returns 0. If the observation comes from the data set, then the flag returns 1. Since the IN= option creates temporary variables, we need to create permanent variables so that we can see the flag in the dataset. With this lines of code "a = x; b = y;", we tell SAS to create two variables named a, b and put the same values as stored in variables x and y. You can assign any name you want, not just a.b.
+ 		IN= option, SAS considers "If X and Y" equivalent to "If X=1 and Y=1".
+
+
+The BY Statement tells SAS to match records based on the common variable you specify. Without the 'BY' statement, it does not perform matching of records. Observations are combined based on their relative position in each data set.
+	    If there is a common variable in the two datasets, the value is overwritten by the value in the right dataset. Since ID and Name are the common variables, the values are overwritten by dataset B.
+	    The number of observations in the combined dataset is equal to the number of observations in the dataset with largest number of observations. For example, dataset A has 5 observations and dataset B has 4 observations so final data would have 5 observations.
+
+;
+
+Basic Merge Exmaple;
+
+
+
+DATA SALARY; 
+  INPUT empid name $ salary  ; 
+DATALINES; 
+1 Rick 623.3		 
+2 Dan 515.2 		
+3 Mike 611.5 		
+4 Ryan 729.1 
+5 Gary 843.25 
+6 Tusar 578.6 
+7 Pranab 632.8 
+8 Rasmi 722.5 
+;
+RUN; 
+DATA DEPT; 
+  INPUT empid dEPT $ ; 
+DATALINES; 
+1 IT 
+2 OPS
+3 IT 
+4 HR 
+5 FIN 
+6 IT 
+7 OPS
+8 FIN 
+;
+RUN; 
+DATA All_details;
+MERGE SALARY DEPT;
+BY empid;
+RUN;
+PROC PRINT DATA=SALARY; 
+PROC PRINT DATA=dept; 
+PROC PRINT DATA=All_details; 
+RUN;
+
+
+** ##  JOINS  ;
+
+Data A;
+Input ID Name$ Height;
+cards;
+1 A 1
+3 B 2
+5 C 2
+7 D 2
+9 E 2
+;
+run;
+
+Data B;
+Input ID Name$ Weight;
+cards;
+2 A 2
+4 B 3
+5 C 4
+7 D 5
+;
+run;
+
+proc sort data = a;
+by id;
+run;
+proc sort data = b;
+by id;
+run;
+
+data dummy;      
+merge a (in=x) b(in=y);
+by id;
+a = x;
+b = y;
+run;
+
+
+
+1. Inner Join (rows common to both tables)
+
+It returns rows common to both tables (data sets). In the final merged file, number of columns would be (Common columns in both the data sets + uncommon columns from data set A + uncommon columns from data set B).
+;
+proc sort data = a;
+by id;
+run;
+
+proc sort data = b;
+by id;
+run;
+
+Data join_inner;
+Merge A (IN = X) B (IN=Y);
+by ID;
+If X and Y;
+run;
+proc print data = join_inner; run;
+Data join_inner;
+Merge A (IN = X) B (IN=Y);
+by ID;
+if X = 1 and Y = 1;
+run;
+proc print data = join_inner; run;
+
+
+  
+
+2. Left Join (Return all rows from the left table, and the matched rows from the right table)
+It returns all rows from the left table, and the matched rows from the right table.
+
+proc sort data = a;
+by id;
+run;
+
+proc sort data = b;
+by id;
+run;
+
+Data join_left;        
+Merge A (IN = X) B (IN=Y);
+by ID;
+If X ;
+run;
+Data join_left;        
+Merge A (IN = X) B (IN=Y);
+by ID;
+If X = 1;
+run;
+proc print data = a;
+proc print data = b;
+proc print data = join_left; run;
+
+
+3.	Full Join (Return all rows from the left table and from the right table)
+
+It returns all rows from the left table and from the right table.
+;
+    proc sort data = a;
+    by id;
+    run;
+
+    proc sort data = b;
+    by id;
+    run;
+
+    Data dummy;        
+    Merge A B;
+    by ID;
+    run;
+
+
+** Special Cases ;
+
+1. If both the tables (data sets) have similar variable name (other than primary key), Data Step MERGE statement would take values of the common variable exist in the TABLE2 (Right table).
+2. If primary key in both the tables (data sets) have duplicate values, Data Step MERGE statement would return a maximum number of values in both the tables. For example, Table 1 has 3 1s and Table 2 has 2 1s, Data Step Merge would return 3 1s. It is called One-to-Many Merge.
+
+Data Step MERGE does not create a cartesian product in case of a many-to-many relationship. It will return number of records for a duplicate value equal to maximum number of the duplicate value in both the table.
+PROC SQL JOIN creates all possible combinations of matching observations in case of a many-to-many relationship. Cartesian product is a collection of all pairs of two given sets. 
+
+Many to Many Relationship - using DATA step and Multiple SET statement;
+Multiple SET statement can also produce cartesian product of two tables. It can be done with POINT= option.
+
+    Data Stack2;
+    set Dataset1;
+    do i=1 to num;
+    set Dataset3 nobs=num point=i;
+    if i=i then output;
+    end;
+    run;
