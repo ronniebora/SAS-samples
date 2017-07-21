@@ -180,3 +180,91 @@ Multiple SET statement can also produce cartesian product of two tables. It can 
     if i=i then output;
     end;
     run;
+
+
+
+
+/*
+Merging of Datasets
+*/
+Multiple SAS data sets can be merged based on a specific common variable to give a single data set.
+This is done using the MERGE statement and BY statement. 
+The total number of observations in the merged data set is often less than the sum of the number of observations in the original data sets. It is because the variables form both data sets get merged as one record based when there is a match in the value of the common variable.
+two Prerequisites for merging data sets given below: 
+input data sets must have at least one common variable to merge on.
+input data sets must be sorted by the common variable(s) that will be used to merge on.
+
+MERGE Data-Set 1 Data-Set 2
+BY Common Variable
+
+Example of Data Merging
+
+Consider two SAS data sets one containing the employee ID with name and salary and another containing employee ID with employee ID and department. In this case to get the complete information for each employee we can merge these two data sets. The final data set will still have one observation per employee but it will contain both the salary and department variables.
+
+
+
+DATA SALARY; 
+  INPUT empid name $ salary  ; 
+DATALINES; 
+1 Rick 623.3		 
+2 Dan 515.2 		
+3 Mike 611.5 		
+4 Ryan 729.1 
+5 Gary 843.25 
+6 Tusar 578.6 
+7 Pranab 632.8 
+8 Rasmi 722.5 
+;
+RUN; 
+DATA DEPT; 
+  INPUT empid dEPT $ ; 
+DATALINES; 
+1 IT 
+2 OPS
+3 IT 
+4 HR 
+5 FIN 
+6 IT 
+7 OPS
+8 FIN 
+;
+RUN; 
+DATA All_details;
+MERGE SALARY DEPT;
+BY (empid);
+RUN;
+PROC PRINT DATA=All_details; 
+RUN;  
+
+
+Missing Values in the Matching Column
+
+There may be cases when some values of the common variable will not match between the data sets. In such cases the data sets still get merged but give missing values in the result.
+
+Example
+Consider the case of employee ID 3 missing from the dataset salary and employee ID 6 missing form data set DEPT. When the above code is applied, we get the below result.
+ID NAME SALARY DEPT	
+1 Rick 623.3	IT 		 
+2 Dan 515.2 	OPS	
+3 .		.		IT
+4 Ryan 729.1    HR 
+5 Gary 843.25   FIN 
+6 Tusar 578.6   .
+7 Pranab 632.8  OPS
+8 Rasmi 722.5   FIN 
+
+
+Merging only the Matches
+
+To avoid the missing values in the result we can consider keeping only the observations with matched values for the common variable. That is achieved by using the IN statement. The merge statement of the SAS program needs to be changed.
+
+Example
+
+In the below example, the IN= value keeps only the observations where the values from both the data sets SALARY and DEPT match.
+DATA All_details;
+MERGE SALARY(IN=a) DEPT(IN=b);
+BY (empid);
+IF a=1 and b=1;
+RUN;
+PROC PRINT DATA=All_details; 
+RUN;  
