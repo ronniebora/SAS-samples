@@ -1,0 +1,107 @@
+1. PROC MEANS can calculate various percentile points such as 1st, 5th, 10th, 25th, 50th, 75th, 90th, 95th, 99th percentiles but it cannot calculate custom percentiles such as 20th, 80th, 97.5th, 99.5th percentiles. Whereas, PROC UNIVARIATE can run custom percentiles.
+2. PROC UNIVARIATE can calculate extreme observations - the five lowest and five highest values. Whereas, PROC MEANS can only calculate MAX value.
+3. PROC UNIVARIATE supports normality tests to check normal distribution. Whereas, PROC MEANS does not support normality tests.
+4. PROC UNIVARIATE generates multiple plots such as histogram, box-plot, steam leaf diagrams whereas PROC MEANS does not support graphics.
+
+Basic ;
+
+proc univariate data = tmp_cr;
+var Wheelbase;
+run;
+
+PROC UNIVARIATE creates five output tables : Moments, BasicMeasures, TestsForLocation, Quantiles, and ExtremeObs. 
+The ODS SELECT can be used to select only one of the table. 
+ODS OUTPUT statement is used to write output in results window to a SAS dataset. 
+/* Grouping and Analysis  */
+
+**The CLASS statement is used to define categorical variable.;
+proc univariate data = tmp_cr;
+var Wheelbase;
+class Make;
+run;
+** above with only basci Moments only ;
+ODS Select Moments;
+proc univariate data = tmp_cr;
+var Wheelbase;
+class Make;
+run;
+**to run the continous variable for only moments table and separate for categorical variable;
+ODS OUTPUT moments = temp_stats;
+proc univariate data = tmp_cr;
+var Wheelbase;
+class Make;
+run;
+ods output close;
+** plotting historgram of the data ;
+proc univariate data = tmp_cr;
+var Wheelbase;
+histogram /normal (color = blue);
+run;
+** Normality tests- The NORMAL keyword tells SAS to generate normality tests.;
+    ods select TestsforNormality;
+    proc univariate data = sashelp.shoes normal;
+    var sales;
+    run;
+** Core Stats concepts 
+# Skewness
+A positive skewed data means that there are a few extreme large values which turns its mean to skew positively. It is also called right skewed.
+Positive Skewness : If skewness > 0, data is positively skewed. Another way to see positive skewness : Mean is greater than median and median is greater than mode.
+
+A negative skewed data means that there are a few extreme small values which turns its mean to skew negatively. It is also called left skewed.
+Negative Skewness : If skewness < 0, data is negatively skewed. Another way to see negative skewness : Mean is less than median and median is less  than mode.
+
+# NORMALITY
+
+The two main tests for normality are as follows :
+1. Shapiro Wilk Test [Sample Size <= 2000]
+It states that the null hypothesis - distribution is normal.
+p value is less that 0.05 so we reject the null hypothesis. It implies distribution is not normal. 
+	If p-value > 0.05, it implies distribution is normal.
+
+2. Kolmogorov-Smirnov Test [Sample Size > 2000]
+In this test, the null hypothesis states the data is normally distributed.
+    If p-value > 0.05, data is normal. In the example above, p-value is less than 0.05, it means data is not normal.
+;
+
+**Custom percentiles in SAS;
+proc univariate data = sashelp.shoes;
+var sales;
+output out = temp
+pctlpts = 10 to 100 by 10 pctlpre = p_;
+run;
+proc print data = temp; run;
+
+proc univariate data = tmp_cr;
+var Wheelbase;
+pctlpts = 95.5, 99.5 pctlpre = p_;
+run;
+proc print data = temp; run;
+
+**Calculate Winsorized and Trimmed Means
+Trimmed Mean : Removing extreme values and then calculate mean after filtering out the extreme values. 10% Trimmed Mean means calculating 10th and 90th percentile values and removing values above these percentile values.
+Winsorized Mean : Capping extreme values and then calculate mean after capping extreme values at kth percentile level. It is same as trimmed mean except removing the extreme values, we are capping at kth percentile level.;
+
+ods select winsorizedmeans;
+ods output winsorizedmeans=means;
+proc univariate winsorized = 0.2 data=sashelp.shoes;
+var sales;
+run;
+
+ods select trimmedmeans;
+ods output trimmedmeans=means;
+proc univariate trimmed = 0.2 data=sashelp.shoes;
+var sales;
+run;
+
+** PLOTS 
+
+Generate Plots
+
+PROC UNIVARIATE generates the following plots with PLOT keyword :
+    Histogram
+    Box Plot
+    Normal Probability Plot
+;
+proc univariate data=sashelp.shoes PLOT;
+var sales;
+run;
