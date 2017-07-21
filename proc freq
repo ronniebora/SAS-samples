@@ -1,0 +1,88 @@
+PROC FREQ
+
+The PROC FREQ is one of the most frequently used SAS procedures which helps to summarize categorical variable. 
+It calculates count/frequency and cumulative frequency of categories of a categorical variable. In other words, it returns the number and percentage of cases falling in multiple categories of a categorical variable. Its not just restricted to counts. 
+Produces bar charts and tests for association between two categorical variables. Categorical variables are of two types - Nominal and Ordinal. A nominal variable is a categorical variable in which categories do not have any order. For example, gender, city etc. An ordinal categorical variable has categories that can be ordered in a meaningful way. For example, rank, status (high/medium/low) etc.
+;
+data tmp_cr;
+set sashelp.cars;
+run;
+
+
+proc freq data = tmp_cr;
+tables Make ;
+run;
+
+TABLES statements tells SAS to return n-way frequency and crosstabulation tables and computes the statistics for these tables.
+
+proc freq data = tmp_cr;
+tables Make/ nocum ;
+run;
+
+# cross tabulation with multiple categorical variable
+--all stats default;
+proc freq data = tmp_cr;
+tables Make * Cylinders;
+run;
+--only freq like an excel pivot;
+proc freq data = tmp_cr;
+tables Make * Cylinders / norow nocol nopercent;
+run;
+--all statistics in a list form instead of cross table;
+proc freq data = tmp_cr;
+tables Make * Cylinders / list;
+run;
+--multiple tables pivots for each category;
+proc freq data = tmp_cr;
+tables Make*( DriveTrain Cylinders )/ norow nocol nopercent;
+run;
+-- count of distinct values ;
+proc freq data = tmp_cr NLEVELS;
+tables Make;
+run;
+--when data already have counts (assuming that cylinder is a count at pivotal level );
+proc freq data = tmp_cr;
+tables Make*DriveTrain;
+weight Cylinders;run;
+
+Chi-Square Analysis
+The CHISQ option provides chi-square tests of homogeneity or independence and measures of association between two categorical variables.
+ identify the statistically significant categorical variables that we should include in our predictive model. All the categorical variables with a chi-square value less than or equal to 0.05 are kept.
+ ;
+proc freq data = tmp_cr noprint;
+tables Make * DriveTrain / chisq;
+output All out=temp_chi chisq;
+run; 
+
+Generate Bar Chart and Dot Plot
+To produce a bar chart for variable 'y', the plots=freqplot (type=bar) option is added. 
+By default, it shows frequency in graph. In order to show percent, you need to add scale=percent. 
+The ODS graphics ON statement tells SAS to produce graphs. Later we turn it off.;
+
+Ods graphics on;
+Proc freq data=tmp_cr order=freq;
+    Tables Make / plots=freqplot (type=bar scale=percent);
+    Run;
+Ods graphics off;
+
+Ods graphics on;
+Proc freq data=tmp_cr order=freq;
+    Tables Cylinder / plots=freqplot (type=bar);
+    Run;
+Ods graphics off;
+
+
+Ods graphics on;
+Proc freq data=tmp_cr order=freq;
+    Tables DriveTrain / plots=freqplot (type=dot);
+    Run;
+Ods graphics off;
+
+Ods graphics on;
+Proc freq data=tmp_cr order=freq;
+    Tables Wheelbase / plots=freqplot (type=dot);
+    Run;
+Ods graphics off;
+
+** To sort categories on descending order by frequency (from largest to smallest count), add ORDER=FREQ option
+** To order categories based on a particular FORMAT, you can use order = FORMATTED option.
