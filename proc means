@@ -1,0 +1,208 @@
+PROC MEANS is one of the most common SAS procedure used for analyzing data. 
+descriptive statistics such as mean, median, count, sum etc. 
+calculate percentiles, quartiles, standard deviation, variance and sample t-test.
+;
+data tmp_cr;
+set Sashelp.cars;
+run;
+
+DATA= option, you need to specify the dataset you want to use. 
+VAR= option, you need to refer the ONLY numeric variables you want to analyze
+;
+Proc Means Data = Sashelp.cars;
+Var Weight Length;
+Run;
+
+
+# Common Statistical Options
+
+The most frequent statistical options used in PROC MEANS are listed below against their description.
+Statistical Option 	Description
+N 	Number of observations
+NMISS 	Number of missing observations
+MEAN 	Arithmetic average
+STD 	Standard Deviation
+MIN 	Minimum
+MAX 	Maximum
+SUM 	Sum of observations
+MEDIAN 	50th percentile
+P1 	1st percentile
+P5 	5th percentile
+P10 	10th percentile
+P90 	90th percentile
+P95 	95th percentile
+P99 	99th percentile
+Q1 	First Quartile
+Q3 	Third Quartile
+VAR 	Variance
+RANGE 	Range
+USS 	Uncorr. sum of squares
+CSS 	Corr. sum of squares
+STDERR 	Standard Error
+T 	Student’s t value for testing Ho: md = 0
+PRT 	P-value associated with t-test above
+SUMWGT 	Sum of the WEIGHT variable values
+QRANGE 	Quartile range
+
+NOLABELS - For not printing labels 
+NONOBS option to delete N Obs column from the Proc Means table.
+;
+
+proc means data = tmp_cr N Nolabels;
+var MPG_Highway Weight Length;
+run;
+
+# Grouping the statistics by categorical variable
+; 
+proc means data = tmp_cr  Nolabels;
+class Make;
+var MPG_Highway Weight Length;
+run;
+
+proc means data = tmp_cr  Nolabels;
+class Make;
+var MPG_Highway Weight Length;
+run;
+
+
+# Format in Proc Means. to group the statistics by making a continous variable into categorical
+
+First, you need to create an user defined format.
+;
+proc means data = tmp_cr;
+var Horsepower;
+run;
+;
+    Proc Format;
+    Value hp_grp
+	200-high = '200+'
+	150-<200 = '150-200'
+	100-<150 = '100-150'
+	50-<100 = '50-100'
+	0-50 = '<50'
+    Run;
+
+Add FORMAT statement to use user defined format in PROC MEANS.
+;
+    Proc Means data = tmp_cr N MEAN STD MIN MAX MEDIAN;
+    Class Horsepower;
+    Format Horsepower hp_grp.;
+    Var MPG_Highway Weight Length;
+    Run;
+#Sorting of the DATA by Name or number of class variable;
+proc means data = tmp_cr  Nolabels;
+class Make/ Descending;
+var MPG_Highway Weight Length;
+run;
+
+#Sorting of the DATA by number of observation under class variable;
+proc means data = tmp_cr  Nolabels;
+class Make/ ORDER = FREQ;
+var MPG_Highway Weight Length;
+run;
+
+#Sorting when PROC FORMAT data ;
+    Proc Means data = tmp_cr N MEAN STD MIN MAX MEDIAN;
+    Class Horsepower / Order = Formatted;
+    Format Horsepower hp_grp.;
+    Var MPG_Highway Weight Length;
+    Run;
+
+
+/*CLASS and BY */
+The CLASS statement returns analysis for a grouping (classification) variable in a single table whereas BY statement returns the analysis for a grouping variable in separate tables.
+
+    Proc Means data = tmp_cr N MEAN STD MIN MAX MEDIAN;
+    by Make;
+    Var MPG_Highway Weight Length;
+    Run;
+
+NOPRINT option to tell SAS not to print output in output window
+The MEAN= MEDIAN= options tells SAS to generate mean and median in the output dataset. 
+AUTONAME Option automatically assigns unique variable names in the Output Data Set “holding” the statistics requested in the OUTPUT statement.
+AUTOLABEL option to automatically assigns unique label names in the Output Data Set “holding” the statistics 
+;
+Proc Means data = tmp_cr NOPRINT;
+    Class Horsepower / Order = Formatted;
+    Format Horsepower hp_grp.;
+    Var MPG_Highway Weight Length;
+Output out = outdata mean= median = /autoname Autolabel;Run;
+
+proc means data = tmp_cr noprint;
+class horsepower / Order = Formatted;
+format horsepower hp_grp.;
+var MPG_Highway Weight Length;
+Output Out = outdata mean(Length)= median(Length)= /autoname Autolabel; 
+run;
+
+proc means data = tmp_cr noprint;
+class horsepower / Order = Formatted;
+format horsepower hp_grp.;
+var MPG_Highway Weight Length;
+Output Out = outdata mean(Length)= _mean1 median(Length)= _median1 /autoname Autolabel; 
+run;
+
+
+proc means data = tmp_cr(where= (MPG_Highway>=50)) noprint ;
+class horsepower / Order = Formatted;
+format horsepower hp_grp.;
+var MPG_Highway Weight Length;
+Output Out = outdata(drop=_FREQ_) mean= median= /autoname Autolabel; 
+run;
+
+
+# Multiple Categories ;
+
+proc means data = tmp_cr Nolabels;
+class Make Origin;
+var MPG_Highway Weight Length;
+run;
+
+TYPES : - PROC MEANS will analyze the numeric analysis variables at all possible combinations of the values of the classification variables. 
+With the TYPES statement, only the analyses specified in it are carried out by PROC MEANS.
+
+NWAYS - NWAY option instructs PROC MEANS to output only observations with the highest value of _TYPE_ to the new data set it is creating
+;
+proc means data = tmp_cr NWAY nolabels;
+class Make Origin;
+var MPG_Highway Weight Length;
+run;
+
+proc means data = tmp_cr nolabels;
+class Make Origin;
+Types()
+Make
+Make * Origin
+Origin;
+var MPG_Highway Weight Length;
+run;
+
+# Multiple CLASS statement permit user control over how the levels of the classification variables are portrayed or written out to new data sets created by PROC MEANS. It means any one of the classification variable can be displayed in descending order.
+;
+proc means data = tmp_cr NWAY nolabels;
+class Make / descending;
+class Origin;
+var MPG_Highway Weight Length;
+run;
+
+
+
+
+-- Inferential Statistics applications
+
+Sample T-Test
+
+With PROC MEANS, we can perform hypothesis testing using sample t-test.
+
+Null Hypothesis - Population Mean of Q1 is equal to 0
+Alternative Hypothesis - Population Mean of Q1 is not equal to 0.
+;
+    proc means data = test t prt;
+    var Q1;
+    run;
+
+The PRT option returns p-value which implies lowest level of significance at which we can reject null hypothesis. Since p-value is less than 0.05, we can reject the null hypothesis and concludes that mean is significantly different from zero.
+
+Difference between PROC MEANS and PROC FREQ
+
+    PROC MEANS  is used to calculate summary statistics such as mean, count etc of numeric variables. It requires at least one numeric variable whereas Proc Freq does not have such limitation. In other words, if you have only one character variable to analyse, PROC FREQ is your friend and procedure to use
