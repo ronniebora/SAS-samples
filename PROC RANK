@@ -1,0 +1,64 @@
+PROC RANK 
+;
+
+In SAS, there are multiple ways to calculate rank overall or by a grouping variable. In data step, it can be done via retain statement. SAS made it easy to compute rank with PROC RANK.;
+
+data tmp_cr;
+set sashelp.cars;
+run;
+
+Notes :  
+    The OUT option is used to store output of the rank procedure.
+    The VAR option is used to specify numeric variable (s) for which you want to calculate rank
+    The RANKS option tells SAS to name the rank variable
+    By default, it calculates rank in ascending order.
+	Percentiles - groups option in PROC RANK.
+	Ranking within GRoup - by statement in proc rank.
+;
+1. Ranking by a continuous variable;
+proc rank data= tmp_cr out = tmp_cr1;
+    var msrp;
+    ranks ranking;
+    run;
+
+2. Ranking by a continuous variable in reverse order;
+proc rank data = tmp_cr descending out = tmp_cr1;
+var invoice;
+ranks ranking;
+run;
+
+3. Percentile Rank ;
+
+
+
+proc rank data = tmp_cr descending groups = 4 out = tmp_cr1;
+var invoice ;
+ranks ranking ;
+run;
+
+4. Ranked by Group 
+proc sort data = tmp_cr;
+by invoice;
+run;
+
+proc rank data = tmp_cr groups=10 out = tmp_cr1;
+var invoice;
+ranks ranking;
+by Type;
+run;
+
+5. Breaking Ties. DENSE Rank;
+
+     proc rank data= tmp_cr ties = dense out = tmp_cr2;
+    var invoice;
+    ranks rank_dense;
+    run;
+
+    LOW - assigns the smallest of the corresponding ranks.
+    HIGH - assigns the largest of the corresponding ranks.
+    MEAN - assigns the mean of the corresponding ranks (Default Option).
+    DENSE - assigns the smallest of the corresponding rank and add +1 to the next rank (don't break sequence)
+
+
+
+
