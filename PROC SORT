@@ -1,0 +1,47 @@
+# 1 PROC SORT 
+
+data readin;
+input ID Name $ Score;
+cards;
+1     David   45
+1     David   74
+2     Sam     45
+2     Ram     54
+3     Bane    87
+3     Mary    92
+3     Bane    87
+4     Dane    23
+5     Jenny   87
+5     Ken     87
+6     Simran  63
+8     Priya   72
+;
+run;
+
+
+
+In PROC SORT, there are two options by which we can remove duplicates.
+
+1. NODUPKEY Option               2. NODUP Option
+The NODUPKEY option removes duplicate observations where value of a variable listed in BY statement is repeated while NODUP option removes duplicate observations where values in all the variables are repeated (identical observations).
+;
+PROC SORT DATA = readin NODUPKEY;
+BY ID;
+RUN;
+
+PROC SORT DATA = readin NODUP;
+ BY ID;
+ RUN;
+
+To sort by all the variables without having to list them all in the program, you can use the keyword ‘_ALL_’ in the BY statement (see below).
+
+
+PROC SORT DATA = readin NODUP;
+BY _all_;
+RUN;
+
+Use the DUPOUT= option with NODUPKEY (or NODUP) to output duplicates to the specified SAS data set: 
+
+PROC SORT DATA = readin NODUPKEY DUPOUT= readin1;
+BY ID;
+RUN;
