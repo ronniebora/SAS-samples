@@ -1,0 +1,159 @@
+1. 	Count Missing and Nonmissing NUMERIC Values
+
+The SAS function N calculates the number of non-blank numeric values across multiple columns. To count the number of missing numeric values, you can use NMISS function.
+
+    data outdata;
+    set temp;
+    nvalues = N(of x--a);
+    nmiss = nmiss(of x--a);
+    proc print;
+    run;
+
+Since SAS has no inbuilt function to calculate the number of variables, we need to use PROC CONTENTS to calculate the number of variables. 
+Later we are storing the number of variables information in a macro variable which is totvar.
+
+
+CMISS Function
+
+The function CMISS counts the number of missing values across columns. It considers missing values of both numeric and character variables.
+
+    proc contents data=temp out=cols noprint;
+    run;
+
+    data _null_;
+     set cols nobs=total;
+     call symputx('totvar', total);
+    run;
+
+    data outdata;
+     set temp;
+     totalvar=&totvar;
+     totmiss=cmiss(of x--b);
+     totnonmiss=totalvar- cmiss(of x--b);
+    proc print ;
+    run;
+
+3. Custom SORT in SAS
+
+
+ Method 1 : Proc Format to define Sort Order
+
+    proc format;
+    value $rank
+    'High' = 1
+    'Medium' = 2
+    'Low' = 3;
+    run;
+
+    proc sql;
+    select * from temp
+    order by put(group, $rank.);
+    quit;
+
+
+	
+Home » SAS » SAS : Custom Sort Order
+SAS : Custom Sort Order
+Deepanshu Bhalla 2 Comments SAS
+In this tutorial, we will cover how to apply custom sort order in SAS.
+Custom Sort Order in SAS
+
+Most of the times, we want to sort variables manually with a custom sort order instead of alphabetically. For example, we have a variable called 'group'. It contains three unique values such as 'High', 'Low' and 'Medium'. We want values to be sort in such a way that 'High' appears first and then followed by 'Medium' and then 'Low'.
+Custom Sort
+
+Sample Data
+The following program would be used to create a sample data.
+
+    data temp;
+    input group$;
+    cards;
+    High
+    Low
+    Medium
+    ;
+    run;
+
+Whats wrong with PROC SORT? 
+
+PROC SORT sorts the character variable alphabetically. 
+PROC SORT would return 'High' in the first observation, followed by 'Low' and then 'Medium'. We want 'Medium' to be appeared in second observation and 'Low' in third observation.
+;
+
+Method 1 : Proc Format to define Sort Order
+
+    proc format;
+    value $rank
+    'High' = 1
+    'Medium' = 2
+    'Low' = 3;
+    run;
+
+    proc sql;
+    select * from temp
+    order by put(group, $rank.);
+    quit;
+
+The $rank format is created to define custom sort order. The keyword $ is used to tell SAS the values are character. Later, put function is used to apply the manual sort order and ORDER BY is used to sort the variable.
+;
+Method 2 : Proc SQL CASE WHEN Method
+
+    proc sql;
+    select * from temp
+    order by case when group = 'High' then 1
+    when group = 'Medium' then 2
+    when group = 'Low' then 3 end;
+    quit;
+
+
+2. count Max / Min value of a Variable in SAS ;
+
+Method I . 
+
+    proc sort data = test;
+    by ID descending sale;
+    run;
+
+    proc sort data = test nodupkey;
+    by ID;
+    run;
+
+
+Method II. 
+
+
+    proc sort data = test;
+    by ID descending sale;
+    run;
+
+    data test1;
+    set test;
+    by ID;
+    If first.ID then output test1;
+    run;
+
+
+Method III. 
+
+    proc sort data = test;
+    by ID;
+    run;
+
+    proc rank data=test out= test2(where=(sale_rank=1))  ties=low descending;
+    by ID;
+    var sale;
+    ranks sale_rank;
+    run;
+
+
+Method IV. 
+
+    proc sql noprint;
+    create table t1 as
+    select * from test a inner join
+    (select ID, max(sale) as maxsale
+    from test
+    group by ID) b
+    on a.ID = b.ID and a.sale = b.maxsale;
+    quit;
+
+
