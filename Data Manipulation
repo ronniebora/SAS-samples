@@ -1,6 +1,7 @@
 1. 	Count Missing and Nonmissing NUMERIC Values
 
-The SAS function N calculates the number of non-blank numeric values across multiple columns. To count the number of missing numeric values, you can use NMISS function.
+The SAS function N calculates the number of non-blank numeric values across multiple columns. 
+To count the number of missing numeric values, you can use NMISS function.
 
     data outdata;
     set temp;
@@ -16,7 +17,7 @@ Later we are storing the number of variables information in a macro variable whi
 CMISS Function
 
 The function CMISS counts the number of missing values across columns. It considers missing values of both numeric and character variables.
-
+;
     proc contents data=temp out=cols noprint;
     run;
 
@@ -37,7 +38,7 @@ The function CMISS counts the number of missing values across columns. It consid
 
 
  Method 1 : Proc Format to define Sort Order
-
+;
     proc format;
     value $rank
     'High' = 1
@@ -51,18 +52,15 @@ The function CMISS counts the number of missing values across columns. It consid
     quit;
 
 
-	
-Home » SAS » SAS : Custom Sort Order
-SAS : Custom Sort Order
-Deepanshu Bhalla 2 Comments SAS
-In this tutorial, we will cover how to apply custom sort order in SAS.
 Custom Sort Order in SAS
 
-Most of the times, we want to sort variables manually with a custom sort order instead of alphabetically. For example, we have a variable called 'group'. It contains three unique values such as 'High', 'Low' and 'Medium'. We want values to be sort in such a way that 'High' appears first and then followed by 'Medium' and then 'Low'.
+Most of the times, we want to sort variables manually with a custom sort order instead of alphabetically. 
+For example, we have a variable called 'group'. It contains three unique values such as 'High', 'Low' and 'Medium'. We want values to be sort in such a way that 'High' appears first and then followed by 'Medium' and then 'Low'.
+
 Custom Sort
 
 Sample Data
-The following program would be used to create a sample data.
+The following program would be used to create a sample data.;
 
     data temp;
     input group$;
@@ -145,7 +143,7 @@ Method III.
     run;
 
 
-Method IV. 
+Method IV. ;
 
     proc sql noprint;
     create table t1 as
